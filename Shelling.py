@@ -41,7 +41,10 @@ class ShellingModel:
             while True:
                 x = random.randint(0, self.__n - 1)
                 y = random.randint(0, self.__n - 1)
-                if self.__grid[x][y].value == self.__colors[Color.EMPTY].value:
+                g = self.__grid[x][y]
+                if g.value == self.__colors[Color.EMPTY].value:
+                    col_unit.x = g.x
+                    col_unit.y = g.y
                     self.__grid[x][y] = col_unit
                     break
 
@@ -58,4 +61,3 @@ class ShellingModel:
         
         for color, col_unit in self.__colors.items():
             self.__fillInSingle(col_unit)
-            
