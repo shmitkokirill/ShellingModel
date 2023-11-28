@@ -45,12 +45,33 @@ class ShellingModel:
                 print('{' + str(col_unit.x) + ',' + str(col_unit.y) + '}', end=' ')
             print()
 
-
     def printUnhappy(self) -> None:
         for col_unit in self.__unhappy_cells:
             print('{' + str(col_unit.x) + ',' + str(col_unit.y) + '}', end=' ')
 
-    def __collectUnhappyCells(self):
+    def modeling(self):
+        # in range below
+        random_u_cell_num = random.randint(0, len(self.__unhappy_cells) - 1)
+        random_e_cell_num = random.randint(0, len(self.__unhappy_cells) - 1)
+        random_unhappy_cell = self.__unhappy_cells[random_u_cell_num]
+        random_empty_cell = self.__empty_cells[random_e_cell_num]
+        x_u = random_unhappy_cell.x
+        y_u = random_unhappy_cell.y
+        x_e = random_empty_cell.x
+        y_e = random_empty_cell.y
+        self.__replaceCells(self.__grid[x_u][y_u], self.__grid[x_e][y_e])
+    
+    def __replaceCells(self, left : ColUnit, right : ColUnit):
+        tmp_l = copy(self.__grid[left.x][left.y]) # left
+        tmp_r = copy(self.__grid[right.x][right.y]) # right 
+        tmp_l.x = tmp_r.x
+        tmp_l.y = tmp_r.y
+        tmp_r.x = tmp_l.x
+        tmp_r.y = tmp_l.y
+        self.__grid[left.x][left.y] = tmp_r
+        self.__grid[right.x][right.y] = tmp_l
+
+    def __collectUnhappyCells(self) -> None:
         grid = self.__grid
         for i in range(len(grid)):
             # for each cell
@@ -80,6 +101,12 @@ class ShellingModel:
                     self.__grid[x][y] = c_cpy
                     break
 
+    def __collectEmptyCells(self):
+        for row in self.__grid:
+            for col_unit in row:
+                if (col_unit.value == self.__colors[Color.EMPTY]):
+                    self.__empty_cells.append(copy(col_unit))
+
     def __defaultInitGrid(self) -> None:
         # fill in with ColUnit.values
         for i in range(self.__n):
@@ -95,3 +122,4 @@ class ShellingModel:
             self.__fillInSingle(col_unit)
         
         self.__collectUnhappyCells()
+        self.__collectEmptyCells()
