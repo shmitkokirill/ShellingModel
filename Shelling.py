@@ -1,4 +1,5 @@
 import random
+import matplotlib.pyplot as plt
 from copy import copy
 
 class Color:
@@ -32,51 +33,75 @@ class ShellingModel:
         self.__empty_cells = []
         self.__unhappy_cells = []
         self.__defaultInitGrid()
+        self.__plt = plt
 
     def print(self) -> None:
         for row in self.__grid:
             for col_unit in row:
                 print(col_unit.value, end=' ')
             print()
+        print()
 
-    def printCoords(self):
-        for row in self.__grid:
-            for col_unit in row:
-                print('{' + str(col_unit.x) + ',' + str(col_unit.y) + '}', end=' ')
-            print()
+    def draw(self) -> None:
+        m = []
+        for i in self.__grid:
+            row = []
+            for col_unit in i:
+                row.append(col_unit.value)
+            m.append(row)
+        self.__plt.imshow(m, cmap='brg')
+        plt.show()
 
     def printUnhappy(self) -> None:
+        print('Unhappy cells:')
         for col_unit in self.__unhappy_cells:
             print('{' + str(col_unit.x) + ',' + str(col_unit.y) + '}', end=' ')
+        print()
 
-    def modeling(self):
+    def printEmpty(self) -> None:
+        print('empty')
+        for col_unit in self.__empty_cells:
+            print('{' + str(col_unit.x) + ',' + str(col_unit.y) + '}', end=' ')
+        print()
+
+    def modeling(self, count : int) -> None:
         # in range below
-        random_u_cell_num = random.randint(0, len(self.__unhappy_cells) - 1)
-        random_e_cell_num = random.randint(0, len(self.__unhappy_cells) - 1)
-        random_unhappy_cell = self.__unhappy_cells[random_u_cell_num]
-        random_empty_cell = self.__empty_cells[random_e_cell_num]
-        x_u = random_unhappy_cell.x
-        y_u = random_unhappy_cell.y
-        x_e = random_empty_cell.x
-        y_e = random_empty_cell.y
-        self.__replaceCells(self.__grid[x_u][y_u], self.__grid[x_e][y_e])
-    
-    def __replaceCells(self, left : ColUnit, right : ColUnit):
-        tmp_l = copy(self.__grid[left.x][left.y]) # left
-        tmp_r = copy(self.__grid[right.x][right.y]) # right 
-        tmp_l.x = tmp_r.x
-        tmp_l.y = tmp_r.y
-        tmp_r.x = tmp_l.x
-        tmp_r.y = tmp_l.y
-        self.__grid[left.x][left.y] = tmp_r
-        self.__grid[right.x][right.y] = tmp_l
+        for _ in range(count):
+            random_u_cell_num = random.randint(0, len(self.__unhappy_cells) - 1)
+            random_e_cell_num = random.randint(0, len(self.__empty_cells) - 1)
+            random_unhappy_cell = self.__unhappy_cells[random_u_cell_num]
+            random_empty_cell = self.__empty_cells[random_e_cell_num]
+            x_u = random_unhappy_cell.x
+            y_u = random_unhappy_cell.y
+            x_e = random_empty_cell.x
+            y_e = random_empty_cell.y
+            self.__replaceCells(self.__grid[x_u][y_u], self.__grid[x_e][y_e])
+            self.__collectUnhappyCells()
+            if len(self.__unhappy_cells) == 0:
+                break
+            self.__collectEmptyCells()
+
+    def __replaceCells(self, left : ColUnit, right : ColUnit) -> None:
+        tmp = left.value
+        self.__grid[left.x][left.y].value = right.value
+        self.__grid[right.x][right.y].value = tmp 
+
+    def __collectEmptyCells(self) -> None:
+        self.__empty_cells.clear()
+        for row in self.__grid:
+            for col_unit in row:
+                if (col_unit.value == self.__colors[Color.EMPTY].value):
+                    self.__empty_cells.append(copy(col_unit))
 
     def __collectUnhappyCells(self) -> None:
+        self.__unhappy_cells.clear()
         grid = self.__grid
         for i in range(len(grid)):
             # for each cell
             for j in range(len(grid[i])):
                 cell = grid[i][j]
+                if cell.value == self.__colors[Color.EMPTY].value:
+                    continue
 
                 same_color_neighbors = 0
                 # check around current cell
@@ -85,10 +110,16 @@ class ShellingModel:
                         if (x, y) != (i, j) and grid[x][y].value == cell.value:
                             same_color_neighbors += 1
 
-                if same_color_neighbors < 2:
+                if same_color_neighbors < 2 and not self.__isInUnhappy(cell):
                     self.__unhappy_cells.append(cell)
 
-    def __fillInSingle(self, col_unit : ColUnit):
+    def __isInUnhappy(self, col_unit : ColUnit) -> bool:
+        for cu in self.__unhappy_cells:
+            if cu.x == col_unit.x and cu.y == col_unit.y:
+                return True
+        return False
+
+    def __fillInSingle(self, col_unit : ColUnit) -> None:
         for _ in range(col_unit.count):
             c_cpy = copy(col_unit)
             while True:
@@ -100,12 +131,6 @@ class ShellingModel:
                     c_cpy.y = g.y
                     self.__grid[x][y] = c_cpy
                     break
-
-    def __collectEmptyCells(self):
-        for row in self.__grid:
-            for col_unit in row:
-                if (col_unit.value == self.__colors[Color.EMPTY]):
-                    self.__empty_cells.append(copy(col_unit))
 
     def __defaultInitGrid(self) -> None:
         # fill in with ColUnit.values

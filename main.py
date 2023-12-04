@@ -1,8 +1,13 @@
 from Shelling import ShellingModel
 
-sm = ShellingModel(10)
+sm = ShellingModel(30)
+print('First:')
 sm.print()
 print()
-sm.printCoords()
+sm.printUnhappy()
+print()
+sm.modeling(500)
+sm.print()
 print()
 sm.printUnhappy()
+sm.draw()
